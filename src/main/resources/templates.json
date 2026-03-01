@@ -1,0 +1,127 @@
+{
+	"projectType": {
+		"prompt": "Project type",
+		"allowCustom": false,
+		"options": [
+			{
+				"id": "1",
+				"label": "Monolith",
+				"value": "monolith",
+				"aliases": [
+					"mono",
+					"monolith"
+				]
+			},
+			{
+				"id": "2",
+				"label": "Multi-module",
+				"value": "multi-module",
+				"aliases": [
+					"multi",
+					"multi-module"
+				]
+			},
+			{
+				"id": "3",
+				"label": "Microservices",
+				"value": "microservices",
+				"aliases": [
+					"micro",
+					"microservices"
+				]
+			}
+		]
+	},
+	"javaVersion": {
+		"prompt": "Java version",
+		"allowCustom": true,
+		"options": [
+			{
+				"id": "1",
+				"label": "17 (LTS)",
+				"value": "17",
+				"aliases": [
+					"17"
+				]
+			},
+			{
+				"id": "2",
+				"label": "21 (LTS)",
+				"value": "21",
+				"aliases": [
+					"21"
+				]
+			},
+			{
+				"id": "3",
+				"label": "25 (LTS)",
+				"value": "25",
+				"aliases": [
+					"25"
+				]
+			}
+		]
+	},
+	"springBootVersion": {
+		"prompt": "Spring Boot version",
+		"allowCustom": true,
+		"options": [
+			{
+				"id": "1",
+				"label": "3.2.x (LTS)",
+				"value": "3.2.x",
+				"aliases": [
+					"3.2"
+				]
+			},
+			{
+				"id": "2",
+				"label": "3.3.x",
+				"value": "3.3.x",
+				"aliases": [
+					"3.3"
+				]
+			},
+			{
+				"id": "3",
+				"label": "3.4.x",
+				"value": "3.4.x",
+				"aliases": [
+					"3.4"
+				]
+			},
+			{
+				"id": "4",
+				"label": "4.0.x",
+				"value": "4.0.x",
+				"aliases": [
+					"4.0"
+				]
+			}
+		]
+	},
+	"buildTool": {
+		"prompt": "Build tool",
+		"allowCustom": false,
+		"options": [
+			{
+				"id": "1",
+				"label": "Maven",
+				"value": "maven",
+				"aliases": [
+					"m",
+					"maven"
+				]
+			},
+			{
+				"id": "2",
+				"label": "Gradle",
+				"value": "gradle",
+				"aliases": [
+					"g",
+					"gradle"
+				]
+			}
+		]
+	}
+}

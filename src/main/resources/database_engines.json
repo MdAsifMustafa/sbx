@@ -1,0 +1,119 @@
+{
+  "defaults": {
+    "host": "localhost",
+    "database": "app",
+    "username": "root"
+  },
+  "engines": {
+
+    "mysql": {
+      "displayName": "MySQL",
+      "jdbcPrefix": "jdbc:mysql://",
+      "defaultPort": 3306,
+      "dependency": "mysql:mysql-connector-java",
+      "enabledByDefault": true
+    },
+
+    "postgresql": {
+      "displayName": "PostgreSQL",
+      "jdbcPrefix": "jdbc:postgresql://",
+      "defaultPort": 5432,
+      "dependency": "org.postgresql:postgresql",
+      "enabledByDefault": true
+    },
+
+    "mariadb": {
+      "displayName": "MariaDB",
+      "jdbcPrefix": "jdbc:mariadb://",
+      "defaultPort": 3306,
+      "dependency": "org.mariadb.jdbc:mariadb-java-client",
+      "enabledByDefault": true
+    },
+
+    "sqlserver": {
+      "displayName": "SQL Server",
+      "jdbcPrefix": "jdbc:sqlserver://",
+      "defaultPort": 1433,
+      "dependency": "com.microsoft.sqlserver:mssql-jdbc",
+      "enabledByDefault": true
+    },
+
+    "oracle": {
+      "displayName": "Oracle",
+      "jdbcPrefix": "jdbc:oracle:thin:@",
+      "defaultPort": 1521,
+      "dependency": "com.oracle.database.jdbc:ojdbc8",
+      "enabledByDefault": true
+    },
+    "h2": {
+      "displayName": "H2 (Embedded)",
+      "jdbcPrefix": "jdbc:h2:",
+      "defaultPort": -1,
+      "dependency": "com.h2database:h2",
+      "enabledByDefault": true
+    },
+
+    "sqlite": {
+      "displayName": "SQLite",
+      "jdbcPrefix": "jdbc:sqlite:",
+      "defaultPort": -1,
+      "dependency": "org.xerial:sqlite-jdbc",
+      "enabledByDefault": true
+    },
+    "cockroachdb": {
+      "displayName": "CockroachDB",
+      "jdbcPrefix": "jdbc:postgresql://",
+      "defaultPort": 26257,
+      "dependency": "org.postgresql:postgresql",
+      "enabledByDefault": false
+    },
+
+    "db2": {
+      "displayName": "IBM Db2",
+      "jdbcPrefix": "jdbc:db2://",
+      "defaultPort": 50000,
+      "dependency": "com.ibm.db2:jcc",
+      "enabledByDefault": false
+    },
+
+    "hana": {
+      "displayName": "SAP HANA",
+      "jdbcPrefix": "jdbc:sap://",
+      "defaultPort": 30015,
+      "dependency": "com.sap.cloud.db.jdbc:ngdbc",
+      "enabledByDefault": false
+    },
+
+    "snowflake": {
+      "displayName": "Snowflake",
+      "jdbcPrefix": "jdbc:snowflake://",
+      "defaultPort": 443,
+      "dependency": "net.snowflake:snowflake-jdbc",
+      "enabledByDefault": false
+    },
+
+    "clickhouse": {
+      "displayName": "ClickHouse",
+      "jdbcPrefix": "jdbc:clickhouse://",
+      "defaultPort": 8123,
+      "dependency": "com.clickhouse:clickhouse-jdbc",
+      "enabledByDefault": false
+    },
+
+    "derby": {
+      "displayName": "Apache Derby",
+      "jdbcPrefix": "jdbc:derby:",
+      "defaultPort": -1,
+      "dependency": "org.apache.derby:derby",
+      "enabledByDefault": false
+    },
+
+    "hsqldb": {
+      "displayName": "HSQLDB",
+      "jdbcPrefix": "jdbc:hsqldb:",
+      "defaultPort": -1,
+      "dependency": "org.hsqldb:hsqldb",
+      "enabledByDefault": false
+    }
+  }
+}

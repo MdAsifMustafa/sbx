@@ -1,0 +1,100 @@
+{
+  "scopes": {
+    "test": [
+      "junit",
+      "junit-jupiter",
+      "mockito",
+      "assertj",
+      "hamcrest",
+      "spring-boot-starter-test",
+      "testcontainers",
+      "rest-assured",
+      "cucumber",
+      "archunit"
+    ],
+
+    "runtime": [
+      "mysql",
+      "mysql-connector",
+      "mysql-connector-j",
+      "postgresql",
+      "mariadb",
+      "oracle",
+      "ojdbc",
+      "sqlserver",
+      "mssql",
+      "h2",
+      "hsql",
+      "derby",
+      "mongodb",
+      "redis",
+      "cassandra",
+      "neo4j"
+    ],
+
+    "compileOnly": [
+      "lombok",
+      "mapstruct-processor",
+      "auto-service",
+      "immutables",
+      "error_prone_annotations"
+    ]
+  },
+
+  "annotationProcessors": {
+    "lombok": {
+      "artifact": "lombok",
+      "optional": true
+    },
+
+    "mapstruct": {
+      "artifact": "mapstruct-processor"
+    },
+
+    "querydsl": {
+      "artifact": "querydsl-apt"
+    },
+
+    "auto-service": {
+      "artifact": "auto-service"
+    },
+
+    "immutables": {
+      "artifact": "value"
+    },
+
+    "dagger": {
+      "artifact": "dagger-compiler"
+    }
+  },
+
+  "processorOnly": [
+    "lombok",
+    "mapstruct-processor",
+    "querydsl-apt",
+    "auto-service",
+    "value",
+    "dagger-compiler"
+  ],
+
+  "optional": [
+    "lombok"
+  ],
+
+  "groupScopes": {
+    "org.testcontainers": "test",
+    "org.mockito": "test",
+    "org.junit": "test",
+    "org.assertj": "test"
+  },
+
+  "plugins": {
+    "maven": {
+      "annotationProcessorPlugin": "maven-compiler-plugin"
+    },
+
+    "gradle": {
+      "annotationProcessorConfiguration": "annotationProcessor"
+    }
+  }
+}
