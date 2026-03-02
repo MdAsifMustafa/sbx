@@ -80,7 +80,10 @@ sbx doctor
 
 ## Screenshots
 
-You can add screenshots here later:
+<img width="613" height="543" alt="image" src="https://github.com/user-attachments/assets/b765579b-aeec-4cd6-919f-73ce0fd805cb" />
+<img width="706" height="803" alt="image" src="https://github.com/user-attachments/assets/a6522827-c4f6-46cd-8aeb-da37a0d422cc" />
+<img width="653" height="510" alt="image" src="https://github.com/user-attachments/assets/65e23b21-c8f9-4a99-8ba7-f59498c50e91" />
+
 
 - CLI banner
 - `sbx doctor` output
