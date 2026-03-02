@@ -1,36 +1,126 @@
 # SBX CLI
 
-SBX is a Spring Boot productivity CLI for:
+## Description
 
-- project bootstrap (`app new`, `app init`)
-- dependency management (`dependency add/remove/sync`)
-- build/runtime workflows (`build`, `start`, `stop`, `status`, `log`, `restart`)
-- scaffolding (`make ...`)
-- config helpers (`config db ...`)
-- diagnostics (`doctor`)
+SBX is a developer productivity CLI designed to simplify and standardize Spring Boot development workflows.
 
-## Prerequisites
+It provides a unified command interface for project creation, dependency management, runtime operations, scaffolding, configuration, diagnostics, and build tool conversion.
+
+## Why SBX
+
+Spring Boot development often involves repetitive tasks:
+
+- project setup and initialization
+- dependency management
+- running and monitoring services
+- generating boilerplate code
+- environment configuration
+
+SBX provides a consistent CLI experience while staying compatible with Maven/Gradle and enterprise workflows.
+
+## Features
+
+- Project bootstrap and initialization
+- Dependency management and synchronization
+- Build and runtime workflow automation
+- Code scaffolding generators
+- Configuration helpers
+- Diagnostics and environment validation
+- Runtime logs and process management
+- Build tool conversion (Maven <-> Gradle)
+
+## Installation
+
+### Prerequisites
 
 - Java 21+
 - Maven 3.8+
 
-## Build And Run SBX
-
-Build:
+### Build SBX
 
 ```bash
 mvn clean package
 ```
 
-Output jar:
-
-- `target/sbx-0.1.0-SNAPSHOT.jar`
-
-Run:
+### Run SBX
 
 ```bash
 java -jar target/sbx-0.1.0-SNAPSHOT.jar
 ```
+
+Jar output:
+
+- `target/sbx-0.1.0-SNAPSHOT.jar`
+
+## Quick Start
+
+Create a new Spring Boot app:
+
+```bash
+sbx app new demo-api
+cd demo-api
+```
+
+Add dependency, build, and run:
+
+```bash
+sbx dependency add spring-boot-starter-data-jpa
+sbx build
+sbx start --daemon
+sbx status --health
+```
+
+Initialize SBX in an existing Spring Boot project:
+
+```bash
+cd your-existing-project
+sbx app init
+sbx doctor
+```
+
+## Screenshots
+
+You can add screenshots here later:
+
+- CLI banner
+- `sbx doctor` output
+- `sbx make` command examples
+- dependency add/remove flow
+
+## Architecture
+
+SBX is composed of modular components:
+
+- CLI command parser
+- Project metadata engine
+- Dependency synchronization engine
+- Template scaffolding system
+- Runtime process manager
+- Configuration manager
+- Diagnostics engine
+
+## Roadmap
+
+Planned improvements:
+
+- multi-module project support
+- monolith and microservice workflows
+- observability integrations
+- advanced configuration automation
+- AI-assisted scaffolding from natural language prompts
+- plugin ecosystem support
+
+## Contributing
+
+Feedback, testing, and bug reports are welcome.
+
+If you find an issue:
+
+1. Open a GitHub issue
+2. Add clear reproduction steps
+3. Attach relevant logs/output
+
+Contributions and feature suggestions are appreciated.
 
 ## Global CLI Usage
 

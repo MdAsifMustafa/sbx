@@ -15,6 +15,9 @@ target/
 bin/
 dist/
 build/
+# Keep source package named "build" under src
+!src/main/java/io/github/mdasifmustafa/sbx/build/
+!src/main/java/io/github/mdasifmustafa/sbx/build/**
 *.class
 *.jar
 *.war
