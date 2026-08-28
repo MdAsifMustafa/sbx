@@ -78,6 +78,23 @@
     </dependencies>
 
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>sbx.properties</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <excludes>
+                    <exclude>sbx.properties</exclude>
+                </excludes>
+            </resource>
+        </resources>
+
         <plugins>
 
             <!-- Java 21 -->
@@ -88,6 +105,12 @@
                 <configuration>
                     <release>21</release>
                 </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
             </plugin>
 
             <!-- Single executable JAR -->

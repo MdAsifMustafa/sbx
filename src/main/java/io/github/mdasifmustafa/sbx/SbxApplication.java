@@ -20,11 +20,12 @@ import io.github.mdasifmustafa.sbx.error.SbxException;
 import io.github.mdasifmustafa.sbx.runtime.AppInfo;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
+import picocli.CommandLine.IVersionProvider;
 
 @Command(
         name = "sbx",
         description = "SBX (Spring Boot eXperience) CLI",
-        version = "SBX 1.0.0 - Spring Boot eXperience CLI by asifmustafamd",
+        versionProvider = SbxApplication.AppVersionProvider.class,
         mixinStandardHelpOptions = true,
         subcommands = {
                 AppCommand.class,
@@ -45,6 +46,13 @@ import picocli.CommandLine.Command;
 public class SbxApplication implements Runnable {
 
     private static final Logger logger = LoggerFactory.getLogger(SbxApplication.class);
+
+    static class AppVersionProvider implements IVersionProvider {
+        @Override
+        public String[] getVersion() {
+            return new String[] { AppInfo.getDisplayVersion() };
+        }
+    }
 
     @Override
     public void run() {

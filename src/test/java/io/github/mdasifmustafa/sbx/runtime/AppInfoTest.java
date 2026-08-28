@@ -53,6 +53,15 @@ class AppInfoTest {
     }
 
     @Test
+    void getDisplayVersionUsesRuntimeMetadata() {
+        props.setProperty("sbx.name", "sbx");
+        props.setProperty("sbx.version", "1.2.3");
+        props.setProperty("sbx.repo.owner", "alice");
+
+        assertEquals("SBX 1.2.3 - Spring Boot eXperience CLI by alice", AppInfo.getDisplayVersion());
+    }
+
+    @Test
     void printBannerShowsDynamicContentAndConditionalRepoRow() {
         props.setProperty("sbx.name", "sbx");
         props.setProperty("sbx.version", "0.1.0-SNAPSHOT");

@@ -36,7 +36,23 @@ public class AppInfo {
     }
 
     public static String getVersion() {
-        return PROPS.getProperty("sbx.version", "unknown");
+        String version = PROPS.getProperty("sbx.version");
+        if (version != null && !version.isBlank()) {
+            return version;
+        }
+
+        String implementationVersion = AppInfo.class.getPackage().getImplementationVersion();
+        if (implementationVersion != null && !implementationVersion.isBlank()) {
+            return implementationVersion;
+        }
+
+        return "unknown";
+    }
+
+    public static String getDisplayVersion() {
+        return String.format("SBX %s - Spring Boot eXperience CLI by %s",
+                getVersion(),
+                getAuthorDisplay());
     }
 
     public static String getRepoOwner() {

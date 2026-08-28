@@ -23,7 +23,7 @@ import picocli.CommandLine.Option;
 public class AppInitCommand implements Runnable {
 	@Option(
 	        names = "--boot-version",
-	        description = "Spring Boot version override (e.g. 3.2.5 or 4.0.3.release)"
+	        description = "Spring Boot version override (e.g. 3.5.7 or 4.1.0)"
 	)
 	private String bootVersion;
 
