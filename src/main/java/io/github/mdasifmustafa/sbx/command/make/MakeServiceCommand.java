@@ -1,6 +1,7 @@
 package io.github.mdasifmustafa.sbx.command.make;
 
 import io.github.mdasifmustafa.sbx.template.TemplateEngine;
+import io.github.mdasifmustafa.sbx.ux.SbxResponse;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
@@ -21,7 +22,7 @@ public class MakeServiceCommand extends AbstractMakeCommand {
 
     @Option(names = "--dry-run", description = "Show output without writing files")
     private boolean dryRun;
-    
+
     @Option(names = "--interface", description = "Generate only service interface")
     private boolean onlyInterface;
 
@@ -42,7 +43,7 @@ public class MakeServiceCommand extends AbstractMakeCommand {
 
         // safety check
         if (!generateInterface && !generateImpl) {
-            System.err.println("❌ Nothing to generate. Choose --interface or --impl.");
+            SbxResponse.error("❌ Nothing to generate. Choose --interface or --impl.");
             return;
         }
 

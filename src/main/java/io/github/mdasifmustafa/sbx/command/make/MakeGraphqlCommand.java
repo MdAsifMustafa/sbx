@@ -31,6 +31,9 @@ public class MakeGraphqlCommand extends AbstractMakeCommand {
     @Option(names = "--dry-run", description = "Show output without writing files")
     private boolean dryRun;
 
+    @Option(names = "--package", description = "Relative package path (e.g. blog.posts or blog/posts)")
+    private String customPackage;
+
     @Override
     public void run() {
         if (!ensureProject()) return;
@@ -40,15 +43,16 @@ public class MakeGraphqlCommand extends AbstractMakeCommand {
             query = true;
         }
 
+        String className = toTitleCase(name);
         String basePackage = resolveBasePackage();
-        String pkg = basePackage + ".api.graphql." + name.toLowerCase();
+        String pkg = resolvePackage(basePackage, customPackage, "api.graphql." + name.toLowerCase());
 
         if (!schemaOnly) {
-            Path resolverPath = resolveJavaPath(pkg, name + "Resolver");
+            Path resolverPath = resolveJavaPath(pkg, className + "Resolver");
 
             String resolverContent = TemplateEngine.graphqlResolver(
                     pkg,
-                    name,
+                    className,
                     query,
                     mutation
             );
@@ -62,7 +66,7 @@ public class MakeGraphqlCommand extends AbstractMakeCommand {
         );
 
         String schemaContent = TemplateEngine.graphqlSchema(
-                name,
+                className,
                 query,
                 mutation
         );

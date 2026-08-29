@@ -1,6 +1,7 @@
 package io.github.mdasifmustafa.sbx.command.make;
 
 import io.github.mdasifmustafa.sbx.template.TemplateEngine;
+import io.github.mdasifmustafa.sbx.ux.SbxResponse;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
@@ -28,19 +29,32 @@ public class MakeRepositoryCommand extends AbstractMakeCommand {
     @Option(names = "--dry-run", description = "Show output without writing files")
     private boolean dryRun;
 
+    @Option(names = "--package", description = "Relative package path (e.g. blog.posts or blog/posts)")
+    private String customPackage;
+
     @Override
     public void run() {
         if (!ensureProject()) return;
 
-        String basePackage = resolveBasePackage();
-        String pkg = basePackage + ".domain." + name.toLowerCase();
+        if (!isSimpleName(name)) {
+            SbxResponse.error("❌ Repository name must be a simple name like 'PostBlog' or 'post blog'. Use --package for nested packages.");
+            return;
+        }
 
-        String repoName = name + "Repository";
+        String entityName = toTitleCase(name);
+        String basePackage = resolveBasePackage();
+        String pkg = resolvePackage(
+                basePackage,
+                customPackage,
+                "domain." + name.toLowerCase()
+        );
+
+        String repoName = entityName + "Repository";
         Path path = resolveJavaPath(pkg, repoName);
 
         String content = TemplateEngine.repository(
                 pkg,
-                name,
+                entityName,
                 custom,
                 query
         );

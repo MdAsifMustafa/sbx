@@ -1,6 +1,7 @@
 package io.github.mdasifmustafa.sbx.command.config.db;
 
 import io.github.mdasifmustafa.sbx.config.db.*;
+import io.github.mdasifmustafa.sbx.ux.SbxResponse;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
@@ -37,9 +38,7 @@ public class ConfigDbRenameCommand implements Runnable {
                 cfg.getConnections().get(oldName);
 
             if (conn == null) {
-                System.err.println(
-                    "Connection '" + oldName + "' does not exist."
-                );
+                SbxResponse.error("Connection '" + oldName + "' does not exist.");
                 return;
             }
 

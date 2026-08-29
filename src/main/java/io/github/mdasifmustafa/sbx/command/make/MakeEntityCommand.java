@@ -1,6 +1,7 @@
 package io.github.mdasifmustafa.sbx.command.make;
 
 import io.github.mdasifmustafa.sbx.template.TemplateEngine;
+import io.github.mdasifmustafa.sbx.ux.SbxResponse;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
@@ -18,7 +19,7 @@ public class MakeEntityCommand extends AbstractMakeCommand {
 
     @Option(names = "--table", description = "Custom table name")
     private String table;
-    
+
 
     @Option(names = "--lombok", description = "Add getters and setters")
     private boolean lombok;
@@ -38,18 +39,31 @@ public class MakeEntityCommand extends AbstractMakeCommand {
     @Option(names = "--dry-run", description = "Show output without writing files")
     private boolean dryRun;
 
+    @Option(names = "--package", description = "Relative package path (e.g. blog.posts or blog/posts)")
+    private String customPackage;
+
     @Override
     public void run() {
         if (!ensureProject()) return;
 
-        String basePackage = resolveBasePackage();
-        String pkg = basePackage + ".domain." + name.toLowerCase();
+        if (!isSimpleName(name)) {
+            SbxResponse.error("❌ Entity name must be a simple name like 'PostBlog' or 'post blog'. Use --package for nested packages.");
+            return;
+        }
 
-        Path path = resolveJavaPath(pkg, name);
+        String className = toTitleCase(name);
+        String basePackage = resolveBasePackage();
+        String pkg = resolvePackage(
+                basePackage,
+                customPackage,
+                "domain." + name.toLowerCase()
+        );
+
+        Path path = resolveJavaPath(pkg, className);
 
         String content = TemplateEngine.entity(
                 pkg,
-                name,
+                className,
                 table,
                 uuid,
                 auditable,

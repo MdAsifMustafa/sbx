@@ -1,6 +1,7 @@
 package io.github.mdasifmustafa.sbx.command;
 
 import io.github.mdasifmustafa.sbx.runtime.BuildExecutor;
+import io.github.mdasifmustafa.sbx.ux.SbxResponse;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
@@ -40,7 +41,7 @@ public class LogCommand implements Runnable {
         Path logFile = BuildExecutor.logFile();
 
         if (!Files.exists(logFile)) {
-            System.err.println("❌ No logs found. Is the application running?");
+            SbxResponse.error("❌ No logs found. Is the application running?");
             return;
         }
 

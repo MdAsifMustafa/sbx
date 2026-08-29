@@ -4,6 +4,7 @@ import java.nio.file.Path;
 
 import io.github.mdasifmustafa.sbx.template.TemplateEngine;
 import io.github.mdasifmustafa.sbx.template.Templates;
+import io.github.mdasifmustafa.sbx.ux.SbxResponse;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
@@ -54,19 +55,22 @@ public class MakeControllerCommand extends AbstractMakeCommand {
     public void run() {
         if (!ensureProject()) return;
 
+        if (!isSimpleName(name)) {
+            SbxResponse.error("Controller name must be a simple name like 'PostBlog' or 'post blog'. Use --package for nested packages.");
+            return;
+        }
+
         NameParts parts = parseName(name, "Controller");
 
         String basePackage = resolveBasePackage();
-        String packageName = basePackage + "." +
-                (customPackage != null ? customPackage : "controller");
+        String controllerRoot = resolvePackage(basePackage, customPackage, "controller");
+        String packageName = controllerRoot;
 
         if (!parts.subPackage().isEmpty()) {
             packageName += "." + parts.subPackage();
         }
-        
-        ControllerType type = resolveType();
 
-       
+        ControllerType type = resolveType();
 
         String mappingPath = resolvePath(parts.className());
 
@@ -91,15 +95,12 @@ public class MakeControllerCommand extends AbstractMakeCommand {
             generateTest(packageName, parts);
         }
     }
-    
+
     private void generateCrudLayer(String basePackage, NameParts parts) {
 
         String entityName = parts.className().replace("Controller", "");
-
-        // =============================
-        // SERVICE PACKAGE
-        // =============================
-        String servicePackage = basePackage + ".service";
+        String rootPackage = resolvePackage(basePackage, customPackage, "");
+        String servicePackage = rootPackage + ".service";
 
         // ---- Interface
         Path serviceInterfacePath =
@@ -126,7 +127,7 @@ public class MakeControllerCommand extends AbstractMakeCommand {
         // =============================
         // REPOSITORY
         // =============================
-        String repoPackage = basePackage + ".domain." + entityName.toLowerCase();
+        String repoPackage = rootPackage + ".domain." + entityName.toLowerCase();
 
         Path repoPath =
                 resolveJavaPath(repoPackage, entityName + "Repository");
@@ -154,7 +155,7 @@ public class MakeControllerCommand extends AbstractMakeCommand {
 
     private void generateService(String basePackage, NameParts parts) {
         String serviceName = parts.className().replace("Controller", "Service");
-        String servicePackage = basePackage + ".service";
+        String servicePackage = resolvePackage(basePackage, customPackage, "service");
 
         Path path = resolveJavaPath(servicePackage, serviceName);
 

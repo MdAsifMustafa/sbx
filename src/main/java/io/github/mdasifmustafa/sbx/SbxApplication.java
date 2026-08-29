@@ -15,9 +15,12 @@ import io.github.mdasifmustafa.sbx.command.MakeCommand;
 import io.github.mdasifmustafa.sbx.command.RestartCommand;
 import io.github.mdasifmustafa.sbx.command.StartCommand;
 import io.github.mdasifmustafa.sbx.command.StatusCommand;
+import java.nio.file.Path;
+
 import io.github.mdasifmustafa.sbx.command.StopCommand;
 import io.github.mdasifmustafa.sbx.error.SbxException;
 import io.github.mdasifmustafa.sbx.runtime.AppInfo;
+import io.github.mdasifmustafa.sbx.ux.SbxResponse;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.IVersionProvider;
@@ -61,16 +64,25 @@ public class SbxApplication implements Runnable {
     }
 
     public static void main(String[] args) {
+        CommandLine commandLine = new CommandLine(new SbxApplication());
+        commandLine.setCaseInsensitiveEnumValuesAllowed(true);
+        commandLine.setExecutionExceptionHandler((ex, cmd, parseResult) -> {
+            String message = ex.getMessage() != null ? ex.getMessage() : ex.getClass().getSimpleName();
+            SbxResponse.error(message);
+            return 1;
+        });
+
         try {
-            int exitCode = new CommandLine(new SbxApplication()).execute(args);
+            int exitCode = commandLine.execute(args);
             System.exit(exitCode);
         } catch (SbxException e) {
             logger.error("SbxException occurred", e);
-            System.err.println("✖ " + e.getMessage());
+            SbxResponse.error(e.getMessage());
             System.exit(e.getExitCode());
         } catch (RuntimeException e) {
-            logger.error("Unexpected runtime error", e);
-            System.err.println("✖ Unexpected error: " + e.getMessage());
+            String message = "Unexpected error: " + e.getMessage();
+            logger.error(message, e);
+            SbxResponse.error(message);
             System.exit(99);
         }
     }

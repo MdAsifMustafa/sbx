@@ -5,7 +5,11 @@ public final class CrudControllerTemplate {
     private CrudControllerTemplate() {}
 
     public static String generate(String pkg, String name, String path) {
-        String base = pkg.substring(0, pkg.lastIndexOf(".controller"));
+        String base = pkg;
+        int controllerIndex = pkg.lastIndexOf(".controller");
+        if (controllerIndex > -1) {
+            base = pkg.substring(0, controllerIndex);
+        }
 
         return ""
             + "package " + pkg + ";\n\n"

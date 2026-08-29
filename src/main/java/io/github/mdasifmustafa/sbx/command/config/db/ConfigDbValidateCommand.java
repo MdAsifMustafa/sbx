@@ -1,6 +1,7 @@
 package io.github.mdasifmustafa.sbx.command.config.db;
 
 import io.github.mdasifmustafa.sbx.config.db.*;
+import io.github.mdasifmustafa.sbx.ux.SbxResponse;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
@@ -27,13 +28,13 @@ public class ConfigDbValidateCommand implements Runnable {
                 : new DatabasePropertiesReader().read(res.getFile());
 
         if (cfg.getConnections().isEmpty()) {
-            System.err.println("No database connections found.");
+            SbxResponse.error("No database connections found.");
             return;
         }
 
         if (!cfg.getConnections()
                 .containsKey(cfg.getDefaultConnection())) {
-            System.err.println(
+            SbxResponse.error(
                 "Default connection '" +
                 cfg.getDefaultConnection() +
                 "' does not exist."

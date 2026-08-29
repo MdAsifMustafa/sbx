@@ -5,6 +5,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 import io.github.mdasifmustafa.sbx.config.db.*;
+import io.github.mdasifmustafa.sbx.ux.SbxResponse;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
@@ -44,9 +45,7 @@ public class ConfigDbTestCommand implements Runnable {
             cfg.getConnections().get(target);
 
         if (conn == null) {
-            System.err.println(
-                "Connection '" + target + "' does not exist."
-            );
+            SbxResponse.error("Connection '" + target + "' does not exist.");
             return;
         }
 
@@ -54,9 +53,7 @@ public class ConfigDbTestCommand implements Runnable {
             DatabaseEngineRegistry.get(conn.getEngine());
 
         if (engine == null) {
-            System.err.println(
-                "Unsupported database engine: " + conn.getEngine()
-            );
+            SbxResponse.error("Unsupported database engine: " + conn.getEngine());
             return;
         }
 
@@ -64,7 +61,7 @@ public class ConfigDbTestCommand implements Runnable {
             try {
                 Class.forName(engine.driverClass);
             } catch (ClassNotFoundException e) {
-                System.err.println(
+                SbxResponse.error(
                     "✖ JDBC driver not found.\n" +
                     "  Add dependency: " + engine.dependency
                 );
@@ -92,9 +89,7 @@ public class ConfigDbTestCommand implements Runnable {
             System.out.println("✔ Connection successful.");
 
         } catch (SQLException e) {
-            System.err.println(
-                "✖ Connection failed: " + e.getMessage()
-            );
+            SbxResponse.error("✖ Connection failed: " + e.getMessage());
         }
     }
 }

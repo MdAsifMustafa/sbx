@@ -9,6 +9,7 @@ import java.util.List;
 import io.github.mdasifmustafa.sbx.io.SbxConfigReader;
 import io.github.mdasifmustafa.sbx.runtime.AppRuntimeInfo;
 import io.github.mdasifmustafa.sbx.runtime.BuildExecutor;
+import io.github.mdasifmustafa.sbx.ux.SbxResponse;
 import io.github.mdasifmustafa.sbx.runtime.BuildTool;
 import io.github.mdasifmustafa.sbx.runtime.BuildToolResolver;
 import io.github.mdasifmustafa.sbx.runtime.RuntimeState;
@@ -56,7 +57,7 @@ public class StartCommand implements Runnable {
         Path configPath = Path.of("sbx.json");
 
         if (!Files.exists(configPath)) {
-            System.err.println("❌ sbx.json not found. Are you in an SBX project?");
+            SbxResponse.error("❌ sbx.json not found. Are you in an SBX project?");
             return;
         }
 
@@ -73,7 +74,7 @@ public class StartCommand implements Runnable {
             case MAVEN -> buildMavenCommand(command);
             case GRADLE -> buildGradleCommand(command);
         }
-        
+
 
         System.out.println("🚀 Starting application" + (daemon ? " in daemon mode" : ""));
         BuildExecutor.run(command, daemon);

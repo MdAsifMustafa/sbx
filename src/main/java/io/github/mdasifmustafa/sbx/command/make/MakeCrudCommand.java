@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import io.github.mdasifmustafa.sbx.ux.SbxResponse;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -35,9 +36,17 @@ public class MakeCrudCommand extends AbstractMakeCommand {
     @Option(names = "--dry-run", description = "Show output without writing files")
     private boolean dryRun;
 
+    @Option(names = "--package", description = "Relative package path (e.g. blog.posts or blog/posts)")
+    private String customPackage;
+
     @Override
     public void run() {
         if (!ensureProject()) {
+            return;
+        }
+
+        if (!isSimpleName(name)) {
+            SbxResponse.error("CRUD name must be a simple name like 'PostBlog' or 'post blog'. Use --package for nested packages.");
             return;
         }
 
@@ -50,17 +59,13 @@ public class MakeCrudCommand extends AbstractMakeCommand {
         }
 
         if (!dryRun && !validateGeneratedFiles()) {
-            System.err.println(
-                    "CRUD generation stopped: one or more generated files are invalid."
-            );
+            SbxResponse.error("CRUD generation stopped: one or more generated files are invalid.");
         }
     }
 
     private boolean validateOptions() {
         if (record && lombok) {
-            System.err.println(
-                    "CRUD generation failed: --record and --lombok cannot be used together."
-            );
+            SbxResponse.error("CRUD generation failed: --record and --lombok cannot be used together.");
             return false;
         }
 
@@ -68,35 +73,43 @@ public class MakeCrudCommand extends AbstractMakeCommand {
     }
 
     private boolean generateCrudStack() {
-        if (!execute(new MakeEntityCommand(), "entity", name, lombok ? "--lombok" : null)) {
+        String[] packageArgs = customPackage == null || customPackage.isBlank()
+                ? new String[0]
+                : new String[]{"--package", customPackage};
+
+        String[] entityArgs = concat(
+                new String[]{name},
+                packageArgs,
+                lombok ? new String[]{"--lombok"} : new String[0]
+        );
+        if (!execute(new MakeEntityCommand(), "entity", entityArgs)) {
             return false;
         }
 
-        if (!execute(
-                new MakeDtoCommand(),
-                "request DTO",
-                name,
-                "--from-entity",
-                "--request",
-                record ? "--record" : null,
-                lombok ? "--lombok" : null
-        )) {
+        String[] requestDtoArgs = concat(
+                new String[]{name},
+                packageArgs,
+                new String[]{"--from-entity", "--request"},
+                record ? new String[]{"--record"} : new String[0],
+                lombok ? new String[]{"--lombok"} : new String[0]
+        );
+        if (!execute(new MakeDtoCommand(), "request DTO", requestDtoArgs)) {
             return false;
         }
 
-        if (!execute(
-                new MakeDtoCommand(),
-                "response DTO",
-                name,
-                "--from-entity",
-                "--response",
-                record ? "--record" : null,
-                lombok ? "--lombok" : null
-        )) {
+        String[] responseDtoArgs = concat(
+                new String[]{name},
+                packageArgs,
+                new String[]{"--from-entity", "--response"},
+                record ? new String[]{"--record"} : new String[0],
+                lombok ? new String[]{"--lombok"} : new String[0]
+        );
+        if (!execute(new MakeDtoCommand(), "response DTO", responseDtoArgs)) {
             return false;
         }
 
-        if (!execute(new MakeMapperCommand(), "mapper", name)) {
+        String[] mapperArgs = concat(new String[]{name}, packageArgs);
+        if (!execute(new MakeMapperCommand(), "mapper", mapperArgs)) {
             return false;
         }
 
@@ -104,143 +117,187 @@ public class MakeCrudCommand extends AbstractMakeCommand {
          * The CRUD controller generator currently creates the repository
          * and service layers as part of its --crud generation.
          */
-        if (!execute(
-                new MakeControllerCommand(),
-                "controller",
-                name,
-                "--crud"
-        )) {
+        String[] controllerArgs = concat(new String[]{name}, packageArgs, new String[]{"--crud"});
+        if (!execute(new MakeControllerCommand(), "controller", controllerArgs)) {
             return false;
         }
 
-        if (graphql && !execute(
-                new MakeGraphqlCommand(),
-                "GraphQL resolver",
-                name
-        )) {
-            return false;
+        if (graphql) {
+            String[] graphqlArgs = concat(new String[]{name}, packageArgs);
+            if (!execute(new MakeGraphqlCommand(), "GraphQL resolver", graphqlArgs)) {
+                return false;
+            }
         }
 
         return true;
     }
 
+    private String[] concat(String[]... groups) {
+        java.util.ArrayList<String> values = new java.util.ArrayList<>();
+        for (String[] group : groups) {
+            if (group == null) {
+                continue;
+            }
+            for (String item : group) {
+                if (item != null && !item.isBlank()) {
+                    values.add(item);
+                }
+            }
+        }
+        return values.toArray(String[]::new);
+    }
+
     private boolean execute(Object command, String operation, String... args) {
         CommandLine commandLine = new CommandLine(command);
 
-        int exitCode = commandLine.execute(buildArguments(args));
+        try {
+            int exitCode = commandLine.execute(buildArguments(args));
+            if (exitCode == 0) {
+                return true;
+            }
 
-        if (exitCode == 0) {
-            return true;
+            SbxResponse.error("CRUD generation failed while generating " + operation + ".");
+            return false;
+        } catch (RuntimeException e) {
+            SbxResponse.error(
+                    "CRUD generation failed while generating " + operation + ": " + e.getMessage()
+            );
+            return false;
         }
-
-        System.err.printf(
-                "CRUD generation failed while generating %s.%n",
-                operation
-        );
-
-        return false;
     }
 
     private String[] buildArguments(String... args) {
-        return java.util.stream.Stream.of(args)
-                .filter(java.util.Objects::nonNull)
-                .collect(
-                        java.util.stream.Collectors.collectingAndThen(
-                                java.util.stream.Collectors.toCollection(
-                                        java.util.ArrayList::new
-                                ),
-                                arguments -> {
-                                    if (force) {
-                                        arguments.add("--force");
-                                    }
+        java.util.ArrayList<String> arguments = new java.util.ArrayList<>();
+        for (String arg : args) {
+            if (arg != null && !arg.isBlank()) {
+                arguments.add(arg);
+            }
+        }
 
-                                    if (dryRun) {
-                                        arguments.add("--dry-run");
-                                    }
+        if (force) {
+            arguments.add("--force");
+        }
 
-                                    return arguments.toArray(String[]::new);
-                                }
-                        )
-                );
+        if (dryRun) {
+            arguments.add("--dry-run");
+        }
+
+        return arguments.toArray(String[]::new);
     }
 
     private boolean validateGeneratedFiles() {
         String basePackage = resolveBasePackage();
-        String entityName = name.toLowerCase(Locale.ROOT);
+        String rootPackage = customPackage == null || customPackage.isBlank()
+                ? basePackage
+                : resolveRelativePackage(basePackage, customPackage);
 
-        Path javaRoot = Path.of(
+        String className = toTitleCase(name);
+        String nestedEntityPackage = normalizePackage(
+                customPackage == null || customPackage.isBlank()
+                        ? name
+                        : customPackage + "/" + name
+        );
+        String entityPackage = rootPackage + ".domain." + nestedEntityPackage;
+
+        String entityPath = Path.of(
                 "src",
                 "main",
                 "java",
-                basePackage.replace('.', '/')
-        );
+                entityPackage.replace('.', '/')
+        ).resolve(className + ".java").toString();
+
+        String repositoryPath = Path.of(
+                "src",
+                "main",
+                "java",
+                entityPackage.replace('.', '/')
+        ).resolve(className + "Repository.java").toString();
 
         Map<Path, FileExpectation> requiredFiles = new LinkedHashMap<>();
 
         requiredFiles.put(
-                javaRoot.resolve("domain/" + entityName + "/" + name + ".java"),
-                new FileExpectation(
-                        basePackage + ".domain." + entityName,
-                        name
-                )
+                Path.of(entityPath),
+                new FileExpectation(entityPackage, className)
         );
 
         requiredFiles.put(
-                javaRoot.resolve("api/dto/" + name + "RequestDto.java"),
-                new FileExpectation(
-                        basePackage + ".api.dto",
-                        name + "RequestDto"
-                )
-        );
-
-        requiredFiles.put(
-                javaRoot.resolve("api/dto/" + name + "ResponseDto.java"),
-                new FileExpectation(
-                        basePackage + ".api.dto",
-                        name + "ResponseDto"
-                )
-        );
-
-        requiredFiles.put(
-                javaRoot.resolve("api/mapper/" + name + "Mapper.java"),
-                new FileExpectation(
-                        basePackage + ".api.mapper",
-                        name + "Mapper"
-                )
-        );
-
-        requiredFiles.put(
-                javaRoot.resolve("controller/" + name + "Controller.java"),
-                new FileExpectation(
-                        basePackage + ".controller",
-                        name + "Controller"
-                )
-        );
-
-        requiredFiles.put(
-                javaRoot.resolve("service/" + name + "Service.java"),
-                new FileExpectation(
-                        basePackage + ".service",
-                        name + "Service"
-                )
-        );
-
-        requiredFiles.put(
-                javaRoot.resolve("service/" + name + "ServiceImpl.java"),
-                new FileExpectation(
-                        basePackage + ".service",
-                        name + "ServiceImpl"
-                )
-        );
-
-        requiredFiles.put(
-                javaRoot.resolve(
-                        "domain/" + entityName + "/" + name + "Repository.java"
+                Path.of(
+                        "src",
+                        "main",
+                        "java",
+                        rootPackage.replace('.', '/'),
+                        "api",
+                        "dto",
+                        className + "RequestDto.java"
                 ),
-                new FileExpectation(
-                        basePackage + ".domain." + entityName,
-                        name + "Repository"
-                )
+                new FileExpectation(rootPackage + ".api.dto", className + "RequestDto")
+        );
+
+        requiredFiles.put(
+                Path.of(
+                        "src",
+                        "main",
+                        "java",
+                        rootPackage.replace('.', '/'),
+                        "api",
+                        "dto",
+                        className + "ResponseDto.java"
+                ),
+                new FileExpectation(rootPackage + ".api.dto", className + "ResponseDto")
+        );
+
+        requiredFiles.put(
+                Path.of(
+                        "src",
+                        "main",
+                        "java",
+                        rootPackage.replace('.', '/'),
+                        "api",
+                        "mapper",
+                        className + "Mapper.java"
+                ),
+                new FileExpectation(rootPackage + ".api.mapper", className + "Mapper")
+        );
+
+        requiredFiles.put(
+                Path.of(
+                        "src",
+                        "main",
+                        "java",
+                        rootPackage.replace('.', '/'),
+                        "controller",
+                        className + "Controller.java"
+                ),
+                new FileExpectation(rootPackage + ".controller", className + "Controller")
+        );
+
+        requiredFiles.put(
+                Path.of(
+                        "src",
+                        "main",
+                        "java",
+                        rootPackage.replace('.', '/'),
+                        "service",
+                        className + "Service.java"
+                ),
+                new FileExpectation(rootPackage + ".service", className + "Service")
+        );
+
+        requiredFiles.put(
+                Path.of(
+                        "src",
+                        "main",
+                        "java",
+                        rootPackage.replace('.', '/'),
+                        "service",
+                        className + "ServiceImpl.java"
+                ),
+                new FileExpectation(rootPackage + ".service", className + "ServiceImpl")
+        );
+
+        requiredFiles.put(
+                Path.of(repositoryPath),
+                new FileExpectation(entityPackage, className + "Repository")
         );
 
         boolean valid = true;
@@ -256,7 +313,7 @@ public class MakeCrudCommand extends AbstractMakeCommand {
 
     private boolean validateFile(Path file, FileExpectation expectation) {
         if (!Files.exists(file)) {
-            System.err.println("Missing generated file: " + file);
+            SbxResponse.error("Missing generated file: " + file);
             return false;
         }
 
@@ -270,7 +327,7 @@ public class MakeCrudCommand extends AbstractMakeCommand {
                     content.contains(expectation.typeName());
 
             if (!validPackage || !validDeclaration) {
-                System.err.println(
+                SbxResponse.error(
                         "Invalid generated file: " + file
                                 + " (package or type declaration mismatch)"
                 );
@@ -279,7 +336,7 @@ public class MakeCrudCommand extends AbstractMakeCommand {
 
             return true;
         } catch (Exception e) {
-            System.err.println(
+            SbxResponse.error(
                     "Unable to read generated file: " + file
                             + " (" + e.getMessage() + ")"
             );

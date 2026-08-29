@@ -21,6 +21,7 @@ public final class EntityDtoTemplate {
             String pkg,
             String dtoName,
             String entityName,
+            String entityPackage,
             boolean request,
             boolean response,
             boolean record,
@@ -30,7 +31,7 @@ public final class EntityDtoTemplate {
             throw new IllegalArgumentException("Record and Lombok cannot be used together");
         }
 
-        Path entityPath = resolveEntityPath(pkg, entityName);
+        Path entityPath = resolveEntityPath(entityPackage, entityName);
         List<Field> fields = parseFields(entityPath, request);
 
         StringBuilder sb = new StringBuilder();
@@ -75,12 +76,10 @@ public final class EntityDtoTemplate {
     // Parsing helpers
     // ---------------------------------------------------------------------
 
-    private static Path resolveEntityPath(String dtoPkg, String entityName) {
+    private static Path resolveEntityPath(String entityPackage, String entityName) {
         return Path.of(
                 "src/main/java",
-                dtoPkg
-                        .replace(".api.dto", ".domain." + entityName.toLowerCase())
-                        .replace(".", "/"),
+                entityPackage.replace(".", "/"),
                 entityName + ".java"
         );
     }

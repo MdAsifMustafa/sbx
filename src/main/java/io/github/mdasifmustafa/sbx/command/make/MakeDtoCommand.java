@@ -1,6 +1,7 @@
 package io.github.mdasifmustafa.sbx.command.make;
 
 import io.github.mdasifmustafa.sbx.template.TemplateEngine;
+import io.github.mdasifmustafa.sbx.ux.SbxResponse;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
@@ -33,31 +34,42 @@ public class MakeDtoCommand extends AbstractMakeCommand {
 
     @Option(names = "--dry-run", description = "Show output without writing files")
     private boolean dryRun;
-    
+
     @Option(names = "--from-entity", description = "Generate DTO from JPA entity")
     private boolean fromEntity;
-    
+
     @Option(names = "--lombok", description = "Use Lombok annotations")
     private boolean lombok;
-    
+
+    @Option(names = "--package", description = "Relative package path (e.g. blog.posts or blog/posts)")
+    private String customPackage;
+
     @Override
     public void run() {
         if (!ensureProject()) return;
 
-        String basePackage = resolveBasePackage();
-        String pkg = basePackage + ".api.dto";
+        if (!isSimpleName(name)) {
+            SbxResponse.error("❌ DTO name must be a simple name like 'PostBlog' or 'post blog'. Use --package for nested packages.");
+            return;
+        }
 
-        String dtoName = resolveDtoName();
+        String entityName = toTitleCase(name);
+        String basePackage = resolveBasePackage();
+        String pkg = resolvePackage(basePackage, customPackage, "api.dto");
+        String entityPackage = resolvePackage(basePackage, customPackage, "domain." + normalizeEntityPackageName(name));
+
+        String dtoName = resolveDtoName(entityName);
 
         Path path = resolveJavaPath(pkg, dtoName);
-        
+
         String content;
 
         if (fromEntity) {
           content = TemplateEngine.dtoFromEntity(
                 pkg,
                 dtoName,
-                name,        // Entity name
+                entityName,
+                entityPackage,
                 request,
                 response,
                 record,
@@ -75,9 +87,16 @@ public class MakeDtoCommand extends AbstractMakeCommand {
         write(path, content, force, dryRun);
     }
 
-    private String resolveDtoName() {
-        if (request) return name + "RequestDto";
-        if (response) return name + "ResponseDto";
-        return name + "Dto";
+    private String normalizeEntityPackageName(String value) {
+        if (value == null || value.isBlank()) {
+            return "";
+        }
+        return normalizePackage(value.replace('\\', '/').replace('.', '/'));
+    }
+
+    private String resolveDtoName(String entityName) {
+        if (request) return entityName + "RequestDto";
+        if (response) return entityName + "ResponseDto";
+        return entityName + "Dto";
     }
 }

@@ -1,6 +1,7 @@
 package io.github.mdasifmustafa.sbx.command;
 
 import io.github.mdasifmustafa.sbx.runtime.BuildExecutor;
+import io.github.mdasifmustafa.sbx.ux.SbxResponse;
 import picocli.CommandLine.Command;
 
 @Command(name = "stop", description = "Stop the running application")
@@ -14,7 +15,7 @@ public class StopCommand implements Runnable {
             BuildExecutor.clearPid();
             System.out.println("🛑 Application stopped (PID: " + pid + ")");
         } catch (Exception e) {
-            System.err.println("❌ " + e.getMessage());
+            SbxResponse.error("❌ " + e.getMessage());
         }
     }
 }

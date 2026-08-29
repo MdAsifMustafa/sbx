@@ -53,7 +53,7 @@ public final class TemplateEngine {
     public static String serviceImpl(String pkg, String name) {
         return ServiceImplTemplate.generate(pkg, name);
     }
-    
+
     public static String crudServiceInterface(String pkg, String name) {
         return CrudServiceTemplate.serviceInterface(pkg, name);
     }
@@ -80,7 +80,7 @@ public final class TemplateEngine {
 
     // --------------------------------------------------
     // Entity
-    // --------------------------------------------------    
+    // --------------------------------------------------
     public static String entity(
             String pkg,
             String name,
@@ -95,7 +95,7 @@ public final class TemplateEngine {
 
     // --------------------------------------------------
     // Dto
-    // --------------------------------------------------  
+    // --------------------------------------------------
     public static String dto(
             String pkg,
             String name,
@@ -108,6 +108,7 @@ public final class TemplateEngine {
             String pkg,
             String dtoName,
             String entityName,
+            String entityPackage,
             boolean request,
             boolean response,
             boolean record,
@@ -117,28 +118,29 @@ public final class TemplateEngine {
             pkg,
             dtoName,
             entityName,
+            entityPackage,
             request,
             response,
             record,
             lombok
         );
     }
-    
+
 
     // --------------------------------------------------
     // Flyway Migration
-    // --------------------------------------------------  
-    
+    // --------------------------------------------------
+
     public static String migration(String name) {
         return FlywayMigrationTemplate.generate(name);
     }
-    
+
 
 
     // --------------------------------------------------
     // Graphql
-    // --------------------------------------------------  
-    
+    // --------------------------------------------------
+
     public static String graphqlResolver(
             String pkg,
             String name,

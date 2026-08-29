@@ -3,14 +3,17 @@ package io.github.mdasifmustafa.sbx.command.make;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Locale;
+import java.util.stream.Collectors;
 
 import io.github.mdasifmustafa.sbx.runtime.ProjectPackageResolver;
+import io.github.mdasifmustafa.sbx.ux.SbxResponse;
 
 public abstract class AbstractMakeCommand implements Runnable {
 
     protected boolean ensureProject() {
         if (!Files.exists(Path.of("sbx.json"))) {
-            System.err.println("❌ sbx.json not found. Are you in an SBX project?");
+            SbxResponse.error("❌ sbx.json not found. Are you in an SBX project?");
             return false;
         }
         return true;
@@ -21,7 +24,34 @@ public abstract class AbstractMakeCommand implements Runnable {
      * Example: User + Controller -> UserController
      */
     protected String normalize(String name, String suffix) {
-        return name.endsWith(suffix) ? name : name + suffix;
+        String baseName = toTitleCase(name);
+        return baseName.endsWith(suffix) ? baseName : baseName + suffix;
+    }
+
+    protected String toTitleCase(String name) {
+        if (name == null || name.isBlank()) {
+            return "";
+        }
+
+        String trimmed = name.trim();
+        StringBuilder sb = new StringBuilder();
+        boolean capitalizeNext = true;
+
+        for (int i = 0; i < trimmed.length(); i++) {
+            char ch = trimmed.charAt(i);
+            if (Character.isLetterOrDigit(ch)) {
+                if (capitalizeNext) {
+                    sb.append(Character.toUpperCase(ch));
+                    capitalizeNext = false;
+                } else {
+                    sb.append(ch);
+                }
+            } else {
+                capitalizeNext = true;
+            }
+        }
+
+        return sb.toString();
     }
 
     /**
@@ -43,13 +73,78 @@ public abstract class AbstractMakeCommand implements Runnable {
 
         String subPackage = "";
         if (segments.length > 1) {
-            subPackage = String.join(
-                    ".",
-                    Arrays.copyOf(segments, segments.length - 1)
+            subPackage = normalizePackage(
+                    String.join(".", Arrays.copyOf(segments, segments.length - 1))
             );
         }
 
         return new NameParts(className, subPackage);
+    }
+
+    protected boolean isSimpleName(String rawName) {
+        if (rawName == null) {
+            return false;
+        }
+
+        String trimmed = rawName.trim();
+        if (trimmed.isEmpty()) {
+            return false;
+        }
+
+        if (trimmed.contains("/") || trimmed.contains("\\") || trimmed.contains(".")) {
+            return false;
+        }
+
+        return trimmed.matches("^[A-Za-z0-9_ ]+$");
+    }
+
+    protected String requireSimpleName(String rawName, String kind) {
+        if (!isSimpleName(rawName)) {
+            throw new IllegalArgumentException(
+                    kind + " must be a simple name like 'PostBlog' or 'post blog'. Use --package for nested packages."
+            );
+        }
+        return rawName;
+    }
+
+    protected String normalizePackage(String packagePath) {
+        if (packagePath == null || packagePath.isBlank()) {
+            return "";
+        }
+
+        String normalized = packagePath.trim().replace('\\', '/');
+        String[] segments = normalized.split("[/.]+");
+
+        return Arrays.stream(segments)
+                .filter(segment -> !segment.isBlank())
+                .map(segment -> segment.toLowerCase(Locale.ROOT))
+                .collect(Collectors.joining("."));
+    }
+
+    protected String resolveRelativePackage(String basePackage, String customPackage) {
+        if (customPackage == null || customPackage.isBlank()) {
+            return basePackage;
+        }
+
+        String normalized = normalizePackage(customPackage);
+        return normalized.isBlank() ? basePackage : basePackage + "." + normalized;
+    }
+
+    protected String resolvePackage(String basePackage, String customPackage, String defaultSuffix) {
+        if (customPackage == null || customPackage.isBlank()) {
+            return defaultSuffix == null || defaultSuffix.isBlank()
+                    ? basePackage
+                    : basePackage + "." + defaultSuffix;
+        }
+
+        String normalized = normalizePackage(customPackage);
+        String suffix = defaultSuffix == null || defaultSuffix.isBlank()
+                ? ""
+                : "." + defaultSuffix.replace(".", ".");
+
+        return normalized.isBlank()
+                ? (defaultSuffix == null || defaultSuffix.isBlank() ? basePackage : basePackage + "." + defaultSuffix)
+                : basePackage + "." + normalized + suffix;
     }
 
     /**
@@ -82,7 +177,7 @@ public abstract class AbstractMakeCommand implements Runnable {
             }
 
             if (Files.exists(path) && !force) {
-                System.err.println("❌ File already exists: " + path + " (use --force)");
+                SbxResponse.error("❌ File already exists: " + path + " (use --force)");
                 return;
             }
 
@@ -92,7 +187,7 @@ public abstract class AbstractMakeCommand implements Runnable {
             System.out.println(force ? "♻️  Overwritten " + path : "✅ Created " + path);
 
         } catch (Exception e) {
-            System.err.println("❌ " + e.getMessage());
+            SbxResponse.error("❌ " + e.getMessage());
         }
     }
 
