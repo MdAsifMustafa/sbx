@@ -48,6 +48,12 @@ public class MakeMailCommand extends AbstractMakeCommand {
         }
     }
 
+    @Override
+    protected String[] requiredDependencies() {
+        // Mail support requires the mail starter
+        return new String[]{"mail"};
+    }
+
     private String toKebabCase(String raw) {
         return raw
                 .replaceAll("([a-z])([A-Z])", "$1-$2")

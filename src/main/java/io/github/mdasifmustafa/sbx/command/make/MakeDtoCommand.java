@@ -87,6 +87,15 @@ public class MakeDtoCommand extends AbstractMakeCommand {
         write(path, content, force, dryRun);
     }
 
+    @Override
+    protected String[] requiredDependencies() {
+        java.util.List<String> req = new java.util.ArrayList<>();
+        if (validation) req.add("validation");
+        if (lombok) req.add("lombok");
+        if (fromEntity) req.add("spring-data-jpa");
+        return req.toArray(new String[0]);
+    }
+
     private String normalizeEntityPackageName(String value) {
         if (value == null || value.isBlank()) {
             return "";

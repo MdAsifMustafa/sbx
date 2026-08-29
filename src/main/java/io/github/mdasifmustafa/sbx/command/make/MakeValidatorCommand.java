@@ -47,4 +47,10 @@ public class MakeValidatorCommand extends AbstractMakeCommand {
         String validatorContent = TemplateEngine.validatorClass(pkg, annotationName, fieldType);
         write(validatorPath, validatorContent, force, dryRun);
     }
+
+    @Override
+    protected String[] requiredDependencies() {
+        // Custom validators use Jakarta Validation
+        return new String[]{"validation"};
+    }
 }

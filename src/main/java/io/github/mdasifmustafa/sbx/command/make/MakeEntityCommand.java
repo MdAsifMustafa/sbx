@@ -73,4 +73,13 @@ public class MakeEntityCommand extends AbstractMakeCommand {
 
         write(path, content, force, dryRun);
     }
+
+    @Override
+    protected String[] requiredDependencies() {
+        java.util.List<String> req = new java.util.ArrayList<>();
+        // Entity generation implies JPA support
+        req.add("spring-data-jpa");
+        if (lombok) req.add("lombok");
+        return req.toArray(new String[0]);
+    }
 }

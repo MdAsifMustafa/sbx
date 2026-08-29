@@ -15,7 +15,6 @@ import io.github.mdasifmustafa.sbx.command.MakeCommand;
 import io.github.mdasifmustafa.sbx.command.RestartCommand;
 import io.github.mdasifmustafa.sbx.command.StartCommand;
 import io.github.mdasifmustafa.sbx.command.StatusCommand;
-import java.nio.file.Path;
 
 import io.github.mdasifmustafa.sbx.command.StopCommand;
 import io.github.mdasifmustafa.sbx.error.SbxException;

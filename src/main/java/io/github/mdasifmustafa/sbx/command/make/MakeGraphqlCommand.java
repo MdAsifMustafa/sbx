@@ -73,4 +73,10 @@ public class MakeGraphqlCommand extends AbstractMakeCommand {
 
         write(schemaPath, schemaContent, force, dryRun);
     }
+
+    @Override
+    protected String[] requiredDependencies() {
+        // GraphQL generation requires GraphQL starter
+        return new String[]{"graphql"};
+    }
 }

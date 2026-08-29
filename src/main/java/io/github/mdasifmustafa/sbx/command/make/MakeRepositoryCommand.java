@@ -61,4 +61,11 @@ public class MakeRepositoryCommand extends AbstractMakeCommand {
 
         write(path, content, force, dryRun);
     }
+
+    @Override
+    protected String[] requiredDependencies() {
+        // Only require JPA if not creating a custom repository
+        if (custom) return new String[0];
+        return new String[]{"spring-data-jpa"};
+    }
 }

@@ -47,6 +47,12 @@ public class MakeMigrationCommand extends AbstractMakeCommand {
         write(path, content, force, dryRun);
     }
 
+    @Override
+    protected String[] requiredDependencies() {
+        // Flyway migrations require the Flyway core dependency
+        return new String[]{"flyway"};
+    }
+
     private int resolveNextVersion() {
         Path dir = Path.of("src/main/resources/db/migration");
         if (!Files.exists(dir)) return 1;

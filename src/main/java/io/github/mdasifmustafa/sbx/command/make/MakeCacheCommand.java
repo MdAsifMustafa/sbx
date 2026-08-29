@@ -40,4 +40,13 @@ public class MakeCacheCommand extends AbstractMakeCommand {
         String content = TemplateEngine.cacheService(pkg, className, provider, ttl, keyPrefix);
         write(path, content, force, dryRun);
     }
+
+    @Override
+    protected String[] requiredDependencies() {
+        java.util.List<String> req = new java.util.ArrayList<>();
+        req.add("cache");
+        if ("caffeine".equalsIgnoreCase(provider)) req.add("caffeine");
+        if ("redis".equalsIgnoreCase(provider)) req.add("redis");
+        return req.toArray(new String[0]);
+    }
 }

@@ -8,7 +8,7 @@ import io.github.mdasifmustafa.sbx.command.make.MakeEntityCommand;
 import io.github.mdasifmustafa.sbx.command.make.MakeExceptionCommand;
 import io.github.mdasifmustafa.sbx.command.make.MakeEventCommand;
 import io.github.mdasifmustafa.sbx.command.make.MakeGraphqlCommand;
-import io.github.mdasifmustafa.sbx.command.make.MakeMapStructCommand;
+import io.github.mdasifmustafa.sbx.command.make.MakeMapperCommand;
 import io.github.mdasifmustafa.sbx.command.make.MakeMailCommand;
 import io.github.mdasifmustafa.sbx.command.make.MakeMessageCommand;
 import io.github.mdasifmustafa.sbx.command.make.MakeMigrationCommand;
@@ -31,9 +31,9 @@ import picocli.CommandLine.Command;
                 MakeDtoCommand.class,
                 MakeGraphqlCommand.class,
                 MakeMigrationCommand.class,
-                MakeServiceCommand.class, 
+                MakeServiceCommand.class,
                 MakeRepositoryCommand.class,
-                MakeEntityCommand.class, 
+                MakeEntityCommand.class,
                 MakeEventCommand.class,
                 MakeMailCommand.class,
                 MakeSchedulerCommand.class,
@@ -43,10 +43,10 @@ import picocli.CommandLine.Command;
                 MakeSecurityCommand.class,
                 MakeCacheCommand.class,
                 MakeMessageCommand.class,
-                MakeMapStructCommand.class,
+                MakeMapperCommand.class,
                 MakeTestCommand.class,
                 MakeModuleCommand.class
- 
+
         }
 )
 public class MakeCommand implements Runnable {

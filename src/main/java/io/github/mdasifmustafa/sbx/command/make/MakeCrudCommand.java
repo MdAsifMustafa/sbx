@@ -3,7 +3,6 @@ package io.github.mdasifmustafa.sbx.command.make;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
-import java.util.Locale;
 import java.util.Map;
 
 import io.github.mdasifmustafa.sbx.ux.SbxResponse;
@@ -36,6 +35,9 @@ public class MakeCrudCommand extends AbstractMakeCommand {
     @Option(names = "--dry-run", description = "Show output without writing files")
     private boolean dryRun;
 
+    @Option(names = "--validation", description = "Generate DTOs with validation annotations and annotate controller with @Validated")
+    private boolean validation;
+
     @Option(names = "--package", description = "Relative package path (e.g. blog.posts or blog/posts)")
     private String customPackage;
 
@@ -61,6 +63,18 @@ public class MakeCrudCommand extends AbstractMakeCommand {
         if (!dryRun && !validateGeneratedFiles()) {
             SbxResponse.error("CRUD generation stopped: one or more generated files are invalid.");
         }
+    }
+
+    @Override
+    protected String[] requiredDependencies() {
+        java.util.List<String> req = new java.util.ArrayList<>();
+        // CRUD stack relies on JPA and MapStruct mappers
+        req.add("spring-data-jpa");
+        req.add("mapstruct");
+        req.add("mapstruct-processor");
+        if (lombok) req.add("lombok");
+        if (graphql) req.add("graphql");
+        return req.toArray(new String[0]);
     }
 
     private boolean validateOptions() {
@@ -90,8 +104,9 @@ public class MakeCrudCommand extends AbstractMakeCommand {
                 new String[]{name},
                 packageArgs,
                 new String[]{"--from-entity", "--request"},
-                record ? new String[]{"--record"} : new String[0],
-                lombok ? new String[]{"--lombok"} : new String[0]
+            record ? new String[]{"--record"} : new String[0],
+            lombok ? new String[]{"--lombok"} : new String[0],
+            validation ? new String[]{"--validation"} : new String[0]
         );
         if (!execute(new MakeDtoCommand(), "request DTO", requestDtoArgs)) {
             return false;
@@ -101,14 +116,15 @@ public class MakeCrudCommand extends AbstractMakeCommand {
                 new String[]{name},
                 packageArgs,
                 new String[]{"--from-entity", "--response"},
-                record ? new String[]{"--record"} : new String[0],
-                lombok ? new String[]{"--lombok"} : new String[0]
+            record ? new String[]{"--record"} : new String[0],
+            lombok ? new String[]{"--lombok"} : new String[0],
+            validation ? new String[]{"--validation"} : new String[0]
         );
         if (!execute(new MakeDtoCommand(), "response DTO", responseDtoArgs)) {
             return false;
         }
 
-        String[] mapperArgs = concat(new String[]{name}, packageArgs);
+        String[] mapperArgs = concat(new String[]{name}, packageArgs, new String[]{"--update-method"});
         if (!execute(new MakeMapperCommand(), "mapper", mapperArgs)) {
             return false;
         }
@@ -117,7 +133,7 @@ public class MakeCrudCommand extends AbstractMakeCommand {
          * The CRUD controller generator currently creates the repository
          * and service layers as part of its --crud generation.
          */
-        String[] controllerArgs = concat(new String[]{name}, packageArgs, new String[]{"--crud"});
+        String[] controllerArgs = concat(new String[]{name}, packageArgs, new String[]{"--crud", "--skip-related"}, validation ? new String[]{"--validation"} : new String[0]);
         if (!execute(new MakeControllerCommand(), "controller", controllerArgs)) {
             return false;
         }
@@ -182,6 +198,21 @@ public class MakeCrudCommand extends AbstractMakeCommand {
             arguments.add("--dry-run");
         }
 
+        // Propagate dependency-check flags so nested commands behave the same
+        try {
+            if (isNoDepsCheck()) {
+                arguments.add("--no-deps-check");
+            }
+            if (isAutoApplyDeps()) {
+                arguments.add("--auto-apply-deps");
+            }
+            if (isDepsOnly()) {
+                arguments.add("--deps-only");
+            }
+        } catch (Exception ignored) {
+            // Defensive: if subclass accessors are not available, ignore
+        }
+
         return arguments.toArray(String[]::new);
     }
 
@@ -192,25 +223,21 @@ public class MakeCrudCommand extends AbstractMakeCommand {
                 : resolveRelativePackage(basePackage, customPackage);
 
         String className = toTitleCase(name);
-        String nestedEntityPackage = normalizePackage(
-                customPackage == null || customPackage.isBlank()
-                        ? name
-                        : customPackage + "/" + name
-        );
-        String entityPackage = rootPackage + ".domain." + nestedEntityPackage;
+        // Entity package is built as: rootPackage + ".domain." + entityNameLower
+        String entityPackage = rootPackage + ".domain." + name.toLowerCase();
 
         String entityPath = Path.of(
-                "src",
-                "main",
-                "java",
-                entityPackage.replace('.', '/')
+            "src",
+            "main",
+            "java",
+            entityPackage.replace('.', '/')
         ).resolve(className + ".java").toString();
 
         String repositoryPath = Path.of(
-                "src",
-                "main",
-                "java",
-                entityPackage.replace('.', '/')
+            "src",
+            "main",
+            "java",
+            entityPackage.replace('.', '/')
         ).resolve(className + "Repository.java").toString();
 
         Map<Path, FileExpectation> requiredFiles = new LinkedHashMap<>();

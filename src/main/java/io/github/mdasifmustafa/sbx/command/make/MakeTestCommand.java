@@ -37,4 +37,12 @@ public class MakeTestCommand extends AbstractMakeCommand {
         String content = TemplateEngine.testClass(pkg, className, type, mockito);
         write(path, content, force, dryRun);
     }
+
+    @Override
+    protected String[] requiredDependencies() {
+        java.util.List<String> req = new java.util.ArrayList<>();
+        req.add("test");
+        if ("datajpa".equalsIgnoreCase(type)) req.add("spring-data-jpa");
+        return req.toArray(new String[0]);
+    }
 }

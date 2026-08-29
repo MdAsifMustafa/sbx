@@ -41,4 +41,10 @@ public class MakeSpecCommand extends AbstractMakeCommand {
         String content = TemplateEngine.specification(pkg, className, entityName, paging, sorting);
         write(path, content, force, dryRun);
     }
+
+    @Override
+    protected String[] requiredDependencies() {
+        // JPA Specification requires Spring Data JPA
+        return new String[]{"spring-data-jpa"};
+    }
 }

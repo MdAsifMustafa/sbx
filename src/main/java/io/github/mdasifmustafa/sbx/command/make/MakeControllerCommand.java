@@ -42,6 +42,11 @@ public class MakeControllerCommand extends AbstractMakeCommand {
     @Option(names = "--package", description = "Custom package relative to base")
     private String customPackage;
 
+    @Option(names = "--validation", description = "Enable @Validated on controller and generate DTOs with validation")
+    private boolean validation;
+
+    @Option(names = "--skip-related", description = "Skip generating DTOs and mapper (used when called from CRUD generator)")
+    private boolean skipRelated;
     @Option(names = "--test", description = "Generate test class")
     private boolean test;
 
@@ -77,10 +82,11 @@ public class MakeControllerCommand extends AbstractMakeCommand {
         Path controllerPath = resolveJavaPath(packageName, parts.className());
 
         String content = TemplateEngine.controller(
-                packageName,
-                parts.className().replace("Controller", ""),
-                type,
-                mappingPath
+            packageName,
+            parts.className().replace("Controller", ""),
+            type,
+            mappingPath,
+            validation
         );
 
         write(controllerPath, content, force, dryRun);
@@ -94,6 +100,21 @@ public class MakeControllerCommand extends AbstractMakeCommand {
         if (test) {
             generateTest(packageName, parts);
         }
+    }
+
+    @Override
+    protected String[] requiredDependencies() {
+        // Only request dependencies needed by the options the user selected.
+        java.util.List<String> req = new java.util.ArrayList<>();
+        if (crud) {
+            req.add("spring-data-jpa");
+        }
+        // Controllers and REST endpoints require the web starter
+        if (rest || crud || service) {
+            req.add("web");
+        }
+        // If DTOs/validation or entities are requested elsewhere, add keys accordingly.
+        return req.toArray(new String[0]);
     }
 
     private void generateCrudLayer(String basePackage, NameParts parts) {
@@ -138,6 +159,99 @@ public class MakeControllerCommand extends AbstractMakeCommand {
                 force,
                 dryRun
         );
+
+        // Optionally generate DTOs and mapper for CRUD flows
+        if (!skipRelated) {
+            String[] packageArgs = customPackage == null || customPackage.isBlank()
+                    ? new String[0]
+                    : new String[]{"--package", customPackage};
+
+            String[] requestDtoArgs = concatArgs(new String[]{entityName}, packageArgs, new String[]{"--from-entity", "--request"}, validation ? new String[]{"--validation"} : new String[0]);
+            if (!executeNested(new io.github.mdasifmustafa.sbx.command.make.MakeDtoCommand(), "request DTO", requestDtoArgs)) {
+                return;
+            }
+
+            String[] responseDtoArgs = concatArgs(new String[]{entityName}, packageArgs, new String[]{"--from-entity", "--response"}, validation ? new String[]{"--validation"} : new String[0]);
+            if (!executeNested(new io.github.mdasifmustafa.sbx.command.make.MakeDtoCommand(), "response DTO", responseDtoArgs)) {
+                return;
+            }
+
+            String[] mapperArgs = concatArgs(new String[]{entityName}, packageArgs, new String[]{"--update-method"});
+            if (!executeNested(new io.github.mdasifmustafa.sbx.command.make.MakeMapperCommand(), "mapper", mapperArgs)) {
+                return;
+            }
+        }
+    }
+
+    private boolean executeNested(Object command, String operation, String... args) {
+        picocli.CommandLine commandLine = new picocli.CommandLine(command);
+
+        try {
+            int exitCode = commandLine.execute(buildNestedArguments(args));
+            if (exitCode == 0) {
+                return true;
+            }
+
+            SbxResponse.error("CRUD generation failed while generating " + operation + ".");
+            return false;
+        } catch (RuntimeException e) {
+            SbxResponse.error(
+                    "CRUD generation failed while generating " + operation + ": " + e.getMessage()
+            );
+            return false;
+        }
+    }
+
+    private String[] buildNestedArguments(String... args) {
+        java.util.ArrayList<String> arguments = new java.util.ArrayList<>();
+        for (String arg : args) {
+            if (arg != null && !arg.isBlank()) {
+                arguments.add(arg);
+            }
+        }
+
+        if (force) {
+            arguments.add("--force");
+        }
+
+        if (dryRun) {
+            arguments.add("--dry-run");
+        }
+
+        // Propagate dependency flags from AbstractMakeCommand accessors
+        try {
+            if (isNoDepsCheck()) {
+                arguments.add("--no-deps-check");
+            }
+            if (isAutoApplyDeps()) {
+                arguments.add("--auto-apply-deps");
+            }
+            if (isDepsOnly()) {
+                arguments.add("--deps-only");
+            }
+        } catch (Exception ignored) {
+            // ignore
+        }
+
+        // Propagate validation flag so nested DTO generation uses validation when requested
+        if (validation) {
+            arguments.add("--validation");
+        }
+
+        return arguments.toArray(String[]::new);
+    }
+
+    private String[] concatArgs(String[]... groups) {
+        java.util.ArrayList<String> values = new java.util.ArrayList<>();
+        for (String[] group : groups) {
+            if (group == null) continue;
+            for (String item : group) {
+                if (item != null && !item.isBlank()) {
+                    values.add(item);
+                }
+            }
+        }
+        return values.toArray(String[]::new);
     }
 
     private ControllerType resolveType() {

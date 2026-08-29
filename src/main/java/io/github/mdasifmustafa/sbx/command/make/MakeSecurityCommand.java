@@ -40,4 +40,9 @@ public class MakeSecurityCommand extends AbstractMakeCommand {
         String content = TemplateEngine.securityConfig(pkg, className, methodSecurity, jwt, roles);
         write(path, content, force, dryRun);
     }
+
+    @Override
+    protected String[] requiredDependencies() {
+        return new String[]{"security"};
+    }
 }

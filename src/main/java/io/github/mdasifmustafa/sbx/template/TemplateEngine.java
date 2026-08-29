@@ -29,7 +29,8 @@ public final class TemplateEngine {
             String pkg,
             String className,
             ControllerType type,
-            String path
+            String path,
+            boolean validation
     ) {
         switch (type) {
             case GRAPHQL:
@@ -37,7 +38,7 @@ public final class TemplateEngine {
             case REST:
                 return RestControllerTemplate.generate(pkg, className, path);
             case CRUD:
-                return CrudControllerTemplate.generate(pkg, className, path);
+                return CrudControllerTemplate.generate(pkg, className, path, validation);
             default:
                 return MvcControllerTemplate.generate(pkg, className);
         }
@@ -62,8 +63,8 @@ public final class TemplateEngine {
         return CrudServiceTemplate.serviceImpl(pkg, name);
     }
 
-    public static String crudController(String pkg, String name, String path) {
-        return CrudControllerTemplate.generate(pkg, name, path);
+    public static String crudController(String pkg, String name, String path, boolean validation) {
+        return CrudControllerTemplate.generate(pkg, name, path, validation);
     }
 
     // --------------------------------------------------
@@ -416,20 +417,40 @@ public final class TemplateEngine {
     // --------------------------------------------------
     // MapStruct
     // --------------------------------------------------
-    public static String mapstructMapper(String pkg, String entity, String dto, String componentModel, boolean updateMethod) {
+    public static String mapstructMapper(String pkg, String entity, String requestDto, String responseDto, String componentModel, boolean updateMethod) {
         StringBuilder sb = new StringBuilder();
         sb.append("package ").append(pkg).append(";\n\n");
         sb.append("import org.mapstruct.Mapper;\n");
         if (updateMethod) {
             sb.append("import org.mapstruct.MappingTarget;\n");
         }
-        sb.append("\n@Mapper(componentModel = \"").append(componentModel).append("\")\n");
-        sb.append("public interface ").append(entity).append("MapStructMapper {\n\n");
-        sb.append("    ").append(dto).append(" toDto(").append(entity).append(" entity);\n");
-        sb.append("    ").append(entity).append(" toEntity(").append(dto).append(" dto);\n");
-        if (updateMethod) {
-            sb.append("    void updateEntity(").append(dto).append(" dto, @MappingTarget ").append(entity).append(" entity);\n");
+        // import entity and DTOs
+        String basePkg = pkg.replace(".api.mapper", "");
+        sb.append("import ").append(basePkg).append(".domain.").append(entity.toLowerCase()).append('.').append(entity).append(";\n");
+        if (responseDto != null && !responseDto.isBlank()) {
+            sb.append("import ").append(basePkg).append(".api.dto.").append(responseDto).append(";\n");
         }
+        if (requestDto != null && !requestDto.isBlank()) {
+            sb.append("import ").append(basePkg).append(".api.dto.").append(requestDto).append(";\n");
+        }
+        sb.append("\n@Mapper(componentModel = \"").append(componentModel).append("\")\n");
+        sb.append("public interface ").append(entity).append("Mapper {\n\n");
+        if (responseDto != null && !responseDto.isBlank()) {
+            sb.append("    ").append(responseDto).append(" toDto(").append(entity).append(" entity);\n");
+        } else {
+            sb.append("    // toDto method not generated: response DTO not provided\n");
+        }
+
+        if (requestDto != null && !requestDto.isBlank()) {
+            sb.append("    ").append(entity).append(" toEntity(").append(requestDto).append(" dto);\n");
+        } else {
+            sb.append("    // toEntity method not generated: request DTO not provided\n");
+        }
+
+        if (updateMethod && requestDto != null && !requestDto.isBlank()) {
+            sb.append("    void update(@MappingTarget ").append(entity).append(" entity, ").append(requestDto).append(" dto);\n");
+        }
+
         sb.append("}\n");
         return sb.toString();
     }

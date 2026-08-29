@@ -7,6 +7,8 @@ import java.util.Locale;
 import java.util.stream.Collectors;
 
 import io.github.mdasifmustafa.sbx.runtime.ProjectPackageResolver;
+import io.github.mdasifmustafa.sbx.dependency.DependencyManager;
+import picocli.CommandLine.Option;
 import io.github.mdasifmustafa.sbx.ux.SbxResponse;
 
 public abstract class AbstractMakeCommand implements Runnable {
@@ -16,7 +18,57 @@ public abstract class AbstractMakeCommand implements Runnable {
             SbxResponse.error("❌ sbx.json not found. Are you in an SBX project?");
             return false;
         }
+        try {
+            if (noDepsCheck) {
+                SbxResponse.tip("Skipping dependency checks (--no-deps-check)");
+            } else {
+                if (autoApplyDeps) {
+                    DependencyManager.ensureDependencies(true, requiredDependencies());
+                } else {
+                    DependencyManager.ensureDependencies(requiredDependencies());
+                }
+
+                if (depsOnly) {
+                    SbxResponse.success("Dependency operations completed (--deps-only). Exiting.");
+                    return false;
+                }
+            }
+        } catch (Exception e) {
+            SbxResponse.warning("Dependency check failed: " + e.getMessage());
+        }
+
         return true;
+    }
+
+    /**
+     * Override in subclasses to declare named dependency keys that should
+     * be validated/installed before running the command.
+     * By default no dependencies are checked.
+     */
+    protected String[] requiredDependencies() {
+        return new String[0];
+    }
+
+    @Option(names = "--no-deps-check", description = "Skip dependency checks and prompts")
+    private boolean noDepsCheck;
+
+    @Option(names = "--auto-apply-deps", description = "Automatically add missing dependencies without prompting")
+    private boolean autoApplyDeps;
+
+    @Option(names = "--deps-only", description = "Only perform dependency checks/additions and exit before generation")
+    private boolean depsOnly;
+
+    // Protected accessors allow subclasses to propagate these flags when invoking nested commands
+    protected boolean isNoDepsCheck() {
+        return noDepsCheck;
+    }
+
+    protected boolean isAutoApplyDeps() {
+        return autoApplyDeps;
+    }
+
+    protected boolean isDepsOnly() {
+        return depsOnly;
     }
 
     /**
